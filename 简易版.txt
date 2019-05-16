@@ -1,0 +1,9 @@
+docker run -d --name pinpoint-hbase --network pinpoint -p 2181:2181 -p 60000:60000 -p 16010:16010 -p 60020:60020 -p 16030:16030 pinpointdocker/pinpoint-hbase:1.8.3
+
+docker run -d --name pinpoint-collector --network pinpoint -p 9994:9994 -p 9995:9995/tcp -p 9996:9996/tcp -p 9995:9995/udp -p 9996:9996/udp -e CLUSTER_ENABLE=true -e CLUSTER_ZOOKEEPER_ADDRESS=pinpoint-hbase -e HBASE_HOST=pinpoint-hbase -e HBASE_PORT=2181 -e DEBUG_LEVEL=INFO pinpointdocker/pinpoint-collector:1.8.3
+
+docker run -d --name pinpoint-web --network pinpoint -p 9997:9997 -p 80:8080 -e CLUSTER_ENABLE=true -e CLUSTER_ZOOKEEPER_ADDRESS=pinpoint-hbase -e ADMIN_PASSWORD=admin -e ANALYTICS=true -e HBASE_HOST=pinpoint-hbase -e HBASE_PORT=2181 -e DEBUG_LEVEL=INFO -e CONFIG_SHOW_APPLICATIONSTAT=true pinpointdocker/pinpoint-web:1.8.3
+
+docker run -d --name pinpoint-agent --network pinpoint -v pinpoint-agent:/pinpoint-agent -e COLLECTOR_IP=pinpoint-collector -e COLLECTOR_TCP_PORT=9994 -e COLLECTOR_STAT_PORT=9995 -e COLLECTOR_SPAN_PORT=9996 -e AGENT_DEBUG_LEVEL=INFO pinpointdocker/pinpoint-agent:1.8.3
+
+docker run -d --name pinpoint-quickstart --network pinpoint -v pinpoint-agent:/pinpoint-agent -e JAVA_OPTS="-javaagent:/pinpoint-agent/pinpoint-bootstrap-1.8.3.jar -Dpinpoint.agentId=app-in-docker -Dpinpoint.applicationName=quickapp" pinpointdocker/pinpoint-quickstart
